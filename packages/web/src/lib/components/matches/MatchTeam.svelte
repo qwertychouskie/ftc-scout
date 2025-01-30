@@ -6,7 +6,7 @@
 <script lang="ts">
     import { CURRENT_SEASON } from "@ftc-scout/common";
     import { Alliance, type FullMatchFragment } from "../../graphql/generated/graphql-operations";
-    import { getContext } from "svelte";
+    import { getContext, onMount } from "svelte";
     import { browser } from "$app/environment";
 
     export let team: FullMatchFragment["teams"][number];
@@ -36,6 +36,28 @@
     let clickAction = getContext(TEAM_CLICK_ACTION_CTX) as
         | ((num: number, name: string) => void)
         | undefined;
+
+    // Fade the edges of the text if (and only if) the text exceeds the size of the container
+    onMount(() => {
+        // Select all elements with the .inner class
+        const innerElements = document.querySelectorAll('.inner') as NodeListOf<HTMLElement>;
+
+        function checkOverflow() {
+            innerElements.forEach(innerElement => {
+                if (innerElement.scrollWidth > innerElement.clientWidth) {
+                    innerElement.style.maskImage = 'linear-gradient(90deg, #000 90%, transparent)';
+                } else {
+                    innerElement.style.maskImage = 'none';
+                }
+            });
+        }
+
+        // Run the checkOverflow function on page load
+        checkOverflow()
+
+        // Also check if the page size changes
+        window.addEventListener('resize', checkOverflow);
+    })
 </script>
 
 <td
@@ -84,7 +106,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
 
-        padding: var(--sm-pad) var(--md-pad);
+        padding: var(--sm-pad) 0 var(--sm-pad) var(--md-pad);
 
         cursor: pointer;
 
