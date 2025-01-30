@@ -122,7 +122,10 @@ function computeSeries(level: TournamentLevel, api: MatchFtcApi) {
 }
 
 function computeMatchNumber(level: TournamentLevel, api: MatchFtcApi) {
-    if (level != TournamentLevel.DoubleElim) return api.matchNumber;
-
-    return api.series;
+    if (level === TournamentLevel.DoubleElim) {
+        return api.series * 10 + api.matchNumber;
+    }
+    else {
+        return api.matchNumber;
+    }
 }
