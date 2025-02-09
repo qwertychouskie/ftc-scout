@@ -12,7 +12,7 @@
     $: href = `/events/${season}/${code}/matches`;
 </script>
 
-<td class="inner-hover {color}" title={name}>
+<td class="inner-hover fade-overflow {color}" title={name}>
     <a class="wrap" {href}>
         <span> {name} </span>
         <em class="date">{prettyPrintDateRangeString(start, end)}</em>
