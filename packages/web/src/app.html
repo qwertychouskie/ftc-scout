@@ -6,6 +6,44 @@
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" %theme%>
-		<div style="display: contents">%sveltekit.body%</div>
+		<div class="observable" style="display: contents">%sveltekit.body%</div>
+		<script>
+			const checkOverflow = () => {
+				const fadeElements = document.querySelectorAll('.fade-overflow');
+
+				fadeElements.forEach(fadeElement => {
+					if (fadeElement.scrollWidth > fadeElement.clientWidth) {
+						fadeElement.style.maskImage = 'linear-gradient(90deg, #000 90%, transparent)';
+					} else {
+						fadeElement.style.maskImage = 'none';
+					}
+				});
+			}
+
+			// Run the checkOverflow function ASAP
+			checkOverflow()
+
+			// Run the checkOverflow function momentarily afterwards to catch any stragglers (sometimes needed for some reason)
+			setInterval(function(){ checkOverflow() }, 0);
+			
+			// Run the checkOverflow function on page load
+			window.addEventListener('load', checkOverflow);
+
+			// Also check if the page size changes
+			window.addEventListener('resize', checkOverflow);
+
+			// Also observe for DOM changes (e.g. CSR app loaded in, pages changes, etc.)
+			let observables = document.querySelector('.observable');
+
+			let observer = new MutationObserver(function(mutations) {
+			    mutations.forEach(function(mutation) {
+			        console.log(mutation);
+			        checkOverflow();
+			    });    
+			});
+
+			const config = {characterData: true, subtree: true};
+			observer.observe(observables, config);
+		</script>
 	</body>
 </html>

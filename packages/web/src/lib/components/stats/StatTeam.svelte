@@ -18,7 +18,7 @@
 
 <td
     class:focused={number == focusedTeam}
-    class="inner-hover"
+    class="inner-hover fade-overflow"
     title="{number} {name}"
     on:click={(e) => {
         if (clickAction) {
@@ -63,9 +63,9 @@
         width: 20ch;
         max-width: 100%;
 
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        /* white-space: nowrap; */
+        /* overflow: hidden; */
+        /* text-overflow: ellipsis; */
         padding-right: calc(1px); /* don't cut italics */
     }
 
