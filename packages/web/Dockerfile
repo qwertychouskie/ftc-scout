@@ -30,12 +30,8 @@ RUN --mount=type=cache,target=/root/.npm npm ci --include=dev
 ARG CODEGEN_ENV=prod
 
 COPY --link . .
-COPY ./packages/web/codegen.yml.prod ./packages/web/codegen.yml
-COPY ./packages/web/svelte.config.js.prod ./packages/web/svelte.config.js
-
-# Install node modules
-COPY --link package.json ./
-RUN npm install --include=dev
+COPY ./packages/web/codegen.yml.${CODEGEN_ENV} ./packages/web/codegen.yml
+COPY ./packages/web/svelte.config.js.${CODEGEN_ENV} ./packages/web/svelte.config.js
 
 # Build application
 RUN npm run common:build
