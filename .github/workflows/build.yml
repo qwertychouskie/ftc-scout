@@ -164,6 +164,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           file: ${{ matrix.file }}
           build-args: ${{ matrix.build-args }}
           secrets: ${{ matrix.build-secrets }}
