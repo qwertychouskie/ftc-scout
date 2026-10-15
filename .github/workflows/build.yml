@@ -5,6 +5,7 @@ name: Build
 # repository variables:
 #  - IMAGE_PREFIX: the image name before -server and -web for example: ghcr.io/me/ftc-scout-beta;
 #  - WEB_CODEGEN_ENV: CODEGEN_ENV build argument from web.
+# Cache node_modules, PR use main's cache (read only)
 on:
   push:
     branches:
@@ -33,6 +34,9 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+
 permissions:
   contents: read
 
@@ -49,11 +53,32 @@ jobs:
           persist-credentials: false
 
       - uses: actions/setup-node@v4
+        id: node
         with:
           node-version-file: .nvmrc
-          cache: npm
 
-      - run: npm ci
+      # Skip ci if same lock file
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+
+      - if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Save node_modules
+        if: steps.node-modules.outputs.cache-hit != 'true' && env.FORK_PR != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ steps.node-modules.outputs.cache-primary-key }}
+
       - run: npm run common:build
       - run: npm run server:build
         # Use new schema build command, so no running server needed
@@ -83,7 +108,6 @@ jobs:
               PUBLIC_FRONTEND_CODE=docker-frontend-code
               PUBLIC_SERVER_ORIGIN=api.ftcscout.org
     env:
-      FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
       PUBLISH: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) && (github.event_name != 'workflow_dispatch' || inputs.publish) }}
       IMAGE_PREFIX: ${{ vars.IMAGE_PREFIX || format('ghcr.io/{0}', github.repository) }}
     steps:
@@ -134,7 +158,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          cache-to: ${{ env.FORK_PR != 'true' && format('type=gha,mode=max,ignore-error=true,scope={0}', matrix.name) || '' }}
 
         # If fork, output the built for publish-pr.yml.
       - name: Keep the image for publish-pr.yml
